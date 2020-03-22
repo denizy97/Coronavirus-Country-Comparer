@@ -10,8 +10,14 @@ if plotdead == "y":
     plotdead = True
 else:
     plotdead = False
+plotpercent = input("Do you want to plot the percetage of the cases that died as well? (y/n): ")
+if plotpercent == "y":
+    plotpercent = True
+else:
+    plotpercent = False
 countries_cases = {}
 countries_deaths = {}
+countries_percents = {}
 for country in countries:
     cases = np.array([])
     deaths = np.array([])
@@ -31,40 +37,32 @@ for country in countries:
     deaths = np.append(deaths, current_list["deaths"])
     countries_cases[country] = cases
     countries_deaths[country] = deaths
-
+    countries_percents[country] = np.divide(deaths, cases)*100
 plt.figure(1)
 for country in countries:
     plt.plot(range(len(countries_cases[country])), countries_cases[country], label=country+" cases")
     if plotdead:
         plt.plot(range(len(countries_deaths[country])), countries_deaths[country], label=country+" deaths")
+plt.xlabel("Days")
+plt.ylabel("Num. of people")
+plt.title("Coronavirus cases in given countries (linear scale)")
 plt.legend()
 plt.figure(2)
 for country in countries:
     plt.plot(range(len(countries_cases[country])), countries_cases[country], label=country+" cases")
     if plotdead:
         plt.plot(range(len(countries_deaths[country])), countries_deaths[country], label=country+" deaths")
+plt.xlabel("Days")
+plt.ylabel("Num. of people")
+plt.title("Coronavirus cases in given countries (log scale)")
 plt.yscale("log")
 plt.legend()
-plt.show()
-"""
-turkey_cases = np.array([1, 1, 5, 6, 18, 47, 98, 191, 359, 670, 947])
-turkey_deaths = np.array([0, 0, 0, 0, 1, 1, 2, 3, 4, 9, 21])
-italy_cases = np.array([2, 2, 3, 3, 20, 79, 150, 229, 322, 445, 650, 888, 1128, 1694, 2036, 2502])
-italy_deaths = np.array([0, 0, 0, 0, 1, 2, 3, 6, 10, 12, 17, 21, 29, 34, 52, 79, 107, 148, 197])
-
-plt.figure(1)
-plt.plot(range(len(turkey_cases)), turkey_cases, label="Türkiye vakalar")
-plt.plot(range(len(turkey_cases)+5), italy_cases[:len(turkey_cases)+5], label="İtalya vakalar")
-plt.plot(range(len(turkey_cases)), turkey_deaths, label="Türkiye ölümler")
-plt.plot(range(len(turkey_cases)+5), italy_deaths[:len(turkey_cases)+5], label="İtalya ölümler")
-plt.legend()
-
-plt.figure(2)
-plt.plot(range(len(turkey_cases)), turkey_cases, label="Türkiye vakalar")
-plt.plot(range(len(turkey_cases)+5), italy_cases[:len(turkey_cases)+5], label="İtalya vakalar")
-plt.plot(range(len(turkey_cases)), turkey_deaths, label="Türkiye ölümler")
-plt.plot(range(len(turkey_cases)+5), italy_deaths[:len(turkey_cases)+5], label="İtalya ölümler")
-plt.yscale("log")
+if plotpercent:
+    plt.figure(3)
+    for country in countries:
+        plt.plot(range(len(countries_percents[country])), countries_percents[country], label=country+" deaths/cases ratio")
+    plt.xlabel("Days")
+    plt.ylabel("% of people who died")
+    plt.title("Percentage of deaths/cases in given countries")
 plt.legend()
 plt.show()
-"""
