@@ -97,11 +97,11 @@
 <hr>
 <div class="column">
     <h3 style="text-align:center;">Instructions</h3>
-    <p style="text-align: justify;">1)From below, select countries you want to compare (US and Italy are selected by default as an example).</p>
+    <p style="text-align: justify;">1)From below, select countries you want to compare. US and Italy are selected by default as an example. (If you choose more than 10, the legend get disabled to prevent cluttering)</p>
     <p style="text-align: justify;">2)In the graphs, Day 0 is the first day each country passed a selected amount of cases. 100 is the default, for countries with a lot of cases 1000 is also a good number, on the other hand if one of the countries you compare has less cases you might want to turn it even lower. You can change it in the box below.</p>
     <p style="text-align:center;"><input type="number" autocomplete="off" id="startcase" value=100></p>
     <p style="text-align: justify;">3)When you are done, press the Compare button below.</p>
-    <p style="text-align:center;"><button onclick="recalculate()">Compare</button> <button onclick="resetAll()">Clear Selections</button></p>
+    <p style="text-align:center;"><button onclick="recalculate()">Compare</button> <button onclick="resetAll()">Clear Selections</button> <button onclick="selectAll()">Select All (Not Recommended)</button></p>
     <div class="column">
         <?php
             for ($i=0; $i < floor(sizeof($country_list)/3); $i++){
@@ -140,6 +140,7 @@ var linearctx = document.getElementById('lineGraph').getContext('2d');
 var linearChart = new Chart(linearctx);
 var logctx = document.getElementById('logGraph').getContext('2d');
 var logChart = new Chart(logctx);
+var displayLegends = true;
 function recalculate() {
     linearChart.destroy();
     logChart.destroy();
@@ -155,7 +156,12 @@ function recalculate() {
             compared_countries.push(selectable_countries[i]);
         }
     }
-    
+    if (compared_countries.length > 10){
+        displayLegends = false;
+    }
+    else{
+        displayLegends = true;
+    }
     var start_case = parseInt(document.getElementById("startcase").value); //get from user
     var datas = [];
     var days = [];
@@ -214,6 +220,9 @@ function recalculate() {
                 display: true,
                 fontSize: 24
             },
+            legend: {
+                display: displayLegends
+            },
             scales: {
                 xAxes: [{
                     display: true,
@@ -251,6 +260,9 @@ function recalculate() {
                 text: 'Log Scale',
                 display: true,
                 fontSize: 24
+            },
+            legend: {
+                display: displayLegends
             },
             scales: {
                 xAxes: [{
@@ -292,6 +304,15 @@ function resetAll(){
     //get countries from user
     for (i = 0; i < selectable_countries.length; i++){
         document.getElementById(selectable_countries[i]).checked = false;
+    }
+}
+function selectAll(){
+    var cases = <?php echo json_encode($cases); ?>;
+    var selectable_countries = Object.keys(cases);
+    //document.write(selectable_countries);
+    //get countries from user
+    for (i = 0; i < selectable_countries.length; i++){
+        document.getElementById(selectable_countries[i]).checked = true;
     }
 }
 recalculate();
