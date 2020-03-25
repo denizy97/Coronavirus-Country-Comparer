@@ -39,6 +39,18 @@
             }
         }
     }
+    if (array_key_exists("", $cases)){
+        unset($cases[""]);
+        unset($country_list[array_search("", $country_list)]);
+    }
+    //fix Palestine
+    if (array_key_exists("The West Bank and Gaza", $cases)){
+        $cases["Palestine"] = $cases["The West Bank and Gaza"];
+        unset($cases["The West Bank and Gaza"]);
+        $idx = array_search("The West Bank and Gaza", $country_list);
+        unset($country_list[$idx]);
+        $country_list[$idx] = "Palestine";
+    }
     $array = array();
     //Get deaths
     $url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv";
@@ -69,12 +81,20 @@
             }
         }
     }
+    if (array_key_exists("", $deaths)){
+        unset($deaths[""]);
+    }
+    //fix Palestine
+    if (array_key_exists("The West Bank and Gaza", $deaths)){
+        $deaths["Palestine"] = $deaths["The West Bank and Gaza"];
+        unset($deaths["The West Bank and Gaza"]);
+    }
     
 ?>
 
 <html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head><meta charset="big5">
+    
 	<title>Corona Comparer</title>
 	<style>
 	    .column {
@@ -90,8 +110,10 @@
 <body>
 <h1 style="text-align: center;">COVID-19 Country Comparison</h1>
 <hr>
+<p style="text-align: justify;">This is a simple tool to compare cases and deaths in selected countries over time.</p>
+<p style="text-align: justify;">I made it to visualize how well different measures taken by countries are at slowing down the spread of the virus, but you can use it for whatever your heart desires really.</p>
 <p style="text-align: justify;">Updated once a day so data might not be current.</p>
-<p style="text-align: justify;">Data is taken from <a href="https://github.com/CSSEGISandData/COVID-19">John Hopkins University's Github repository for COVID-19</a>. Check their map at <a href="https://coronavirus.jhu.edu/map.html">here</a>.</p>
+<p style="text-align: justify;">Data is taken from <a href="https://github.com/CSSEGISandData/COVID-19">John Hopkins University's Github repository for COVID-19</a>. Despite their <a href="https://github.com/CSSEGISandData/COVID-19/issues/977">political bias</a>.. Check their map <a href="https://coronavirus.jhu.edu/map.html">here</a>.</p>
 <p style="text-align: justify;">Made by Deniz Yıldırım (denizy@protonmail.com)</p>
 <p style="text-align: justify;">Source code is <a href="https://github.com/denizy97/Coronavirus-Country-Comparer">here</a>.</p>
 <hr>
@@ -105,21 +127,21 @@
     <div class="column">
         <?php
             for ($i=0; $i < floor(sizeof($country_list)/3); $i++){
-                echo("<p><input type=\"checkbox\" autocomplete=\"off\" id=\"" . $country_list[$i] . "\" onclick=\"myFunction()\">" . $country_list[$i] . "</p>");
+                echo("<p><input type=\"checkbox\" autocomplete=\"off\" id=\"" . $country_list[$i] . "\">" . $country_list[$i] . "</p>");
             }
         ?>
     </div>
     <div class="column">
         <?php
             for ($i=floor(sizeof($country_list)/3); $i < floor(2*sizeof($country_list)/3); $i++){
-                echo("<p><input type=\"checkbox\" id=\"" . $country_list[$i] . "\" onclick=\"myFunction()\">" . $country_list[$i] . "</p>");
+                echo("<p><input type=\"checkbox\" id=\"" . $country_list[$i] . "\">" . $country_list[$i] . "</p>");
             }
         ?>
     </div>
     <div class="column">
         <?php
             for ($i=floor(2*sizeof($country_list)/3); $i < sizeof($country_list); $i++){
-                echo("<p><input type=\"checkbox\" id=\"" . $country_list[$i] . "\" onclick=\"myFunction()\">" . $country_list[$i] . "</p>");
+                echo("<p><input type=\"checkbox\" id=\"" . $country_list[$i] . "\">" . $country_list[$i] . "</p>");
             }
         ?>
     </div>
