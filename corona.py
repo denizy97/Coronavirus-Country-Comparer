@@ -35,6 +35,9 @@ for country in countries:
     current_list = r2.json() #parse json
     cases = np.append(cases, current_list["cases"])
     deaths = np.append(deaths, current_list["deaths"])
+    """if country == "Turkey":
+        cases = np.append(cases, 1256)
+        deaths = np.append(deaths, 30)"""
     countries_cases[country] = cases
     countries_deaths[country] = deaths
     countries_percents[country] = np.divide(deaths, cases)*100
