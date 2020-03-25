@@ -1,9 +1,8 @@
 # Corona-Country-Comparer
 Plot cases and deaths in selected countries starting from the a certain amount of cases. Useful to compare how good/bad countries react to COVID-19.
 
-## !!!
-I put a web version of this program at https://deniz-yildirim.org/corona.php check it out!
-## !!!
+## Update
+* I put a web version of this program at https://deniz-yildirim.org/corona.php check it out!
 
 ## How to use the python program
 * Run corona.py
