@@ -1,5 +1,7 @@
 <?php
 /*This file is written in 2020 by Deniz YILDIRIM <denizy@protonmail.com>*/
+    $TRcase = 5698;
+    $TRdeath = 92;
     $turkish_countries = array(
         "ABD" => "US",
         "Afganistan" => "Afghanistan",
@@ -305,6 +307,13 @@
         $deaths["Palestine"] = $deaths["West Bank and Gaza"];
         unset($deaths["West Bank and Gaza"]);
     }
+    
+    //Turkey update latest
+    if(!in_array($TRcase, $cases["Turkey"])){
+        $cases["Turkey"][] = $TRcase;
+        $deaths["Turkey"][] = $TRdeath;
+    }
+    
     //get percentages relative to population
     foreach ($country_list as $cn){
         $cname = $cn;
@@ -423,7 +432,7 @@
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="DeathPercentGraph"></canvas><!-- Logarithmic Graph -->
+    <canvas id="trajectoryGraph"></canvas><!-- Logarithmic Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
@@ -532,7 +541,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Linear Scale',
+                text: 'Günlük Vaka & Ölüm (Lineer/Doğrusal)',
                 display: true,
                 fontSize: 24
             },
@@ -547,7 +556,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Days'
+                        labelString: 'Gün'
                     }
                 }],
                 yAxes: [{
@@ -557,7 +566,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Number of people'
+                        labelString: 'Vaka/Ölüm Sayısı'
                     }
                 }]
             }
@@ -573,7 +582,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Log Scale',
+                text: 'Günlük Vaka & Ölüm (Logaritmik)',
                 display: true,
                 fontSize: 24
             },
@@ -588,7 +597,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Days'
+                        labelString: 'Gün'
                     }
                 }],
                 yAxes: [{
@@ -606,7 +615,7 @@ function recalculate() {
                     display: true,
                     scaleLabel: {
                         display: true,
-                        labelString: 'Number of people'
+                        labelString: 'Vaka/Ölüm Sayısı'
                     }
                 }]
             }
@@ -622,7 +631,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Percentage of Population',
+                text: 'Vaka ve Ölümlerin Nüfustaki Yüzdesi',
                 display: true,
                 fontSize: 24
             },
@@ -637,7 +646,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Days'
+                        labelString: 'Gün'
                     }
                 }],
                 yAxes: [{
@@ -647,7 +656,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: '% Number of people / population'
+                        labelString: '% Vaka/Ölüm Sayısı / Nüfus'
                     }
                 }]
             }

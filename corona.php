@@ -1,5 +1,7 @@
 <?php
 /*This file is written in 2020 by Deniz YILDIRIM <denizy@protonmail.com>*/
+    $TRcase = 5698;
+    $TRdeath = 92;
     $array = array();
     $cases = array();
     $deaths = array();
@@ -89,6 +91,12 @@
     if (array_key_exists("West Bank and Gaza", $deaths)){
         $deaths["Palestine"] = $deaths["West Bank and Gaza"];
         unset($deaths["West Bank and Gaza"]);
+    }
+    
+    //Turkey update latest
+    if(!in_array($TRcase, $cases["Turkey"])){
+        $cases["Turkey"][] = $TRcase;
+        $deaths["Turkey"][] = $TRdeath;
     }
     
     //get percentages relative to population
@@ -209,7 +217,7 @@
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="DeathPercentGraph"></canvas><!-- Logarithmic Graph -->
+    <canvas id="trajectoryGraph"></canvas><!-- Trajectory Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
@@ -318,7 +326,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Linear Scale',
+                text: 'Cases & Deaths per Day (Linear)',
                 display: true,
                 fontSize: 24
             },
@@ -359,7 +367,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Log Scale',
+                text: 'Cases & Deaths per Day (Logarithmic)',
                 display: true,
                 fontSize: 24
             },
@@ -408,7 +416,7 @@ function recalculate() {
         },
         options: {
             title: {
-                text: 'Percentage of Population',
+                text: 'Cases & Deaths as Percentage of Population (Linear)',
                 display: true,
                 fontSize: 24
             },
@@ -433,7 +441,7 @@ function recalculate() {
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: '% Number of people / population'
+                        labelString: '% Number of people / Population'
                     }
                 }]
             }
