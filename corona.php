@@ -3,9 +3,10 @@
     $array = array();
     $cases = array();
     $deaths = array();
+    $percentagecases = array();
+    $percentagedeaths = array();
     $country_list = array();
     $DATE_COL = 4;
-    
     //Get cases
     $url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
     $ch = curl_init();
@@ -44,10 +45,10 @@
         unset($country_list[array_search("", $country_list)]);
     }
     //fix Palestine
-    if (array_key_exists("The West Bank and Gaza", $cases)){
-        $cases["Palestine"] = $cases["The West Bank and Gaza"];
-        unset($cases["The West Bank and Gaza"]);
-        $idx = array_search("The West Bank and Gaza", $country_list);
+    if (array_key_exists("West Bank and Gaza", $cases)){
+        $cases["Palestine"] = $cases["West Bank and Gaza"];
+        unset($cases["West Bank and Gaza"]);
+        $idx = array_search("West Bank and Gaza", $country_list);
         unset($country_list[$idx]);
         $country_list[$idx] = "Palestine";
     }
@@ -85,16 +86,73 @@
         unset($deaths[""]);
     }
     //fix Palestine
-    if (array_key_exists("The West Bank and Gaza", $deaths)){
-        $deaths["Palestine"] = $deaths["The West Bank and Gaza"];
-        unset($deaths["The West Bank and Gaza"]);
+    if (array_key_exists("West Bank and Gaza", $deaths)){
+        $deaths["Palestine"] = $deaths["West Bank and Gaza"];
+        unset($deaths["West Bank and Gaza"]);
     }
     
+    //get percentages relative to population
+    foreach ($country_list as $cn){
+        $cname = $cn;
+        
+        //fix names
+        if ($cn == "Congo (Brazzaville)"){
+            $cname = "Congo";
+        }
+        elseif ($cn == "Congo (Kinshasa)"){
+            $cname = "DR Congo";
+        }
+        elseif ($cn == "Diamond Princess"){
+            $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
+            $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+            continue;
+        }
+        elseif ($cn == "Czechia"){
+            $cname = "Czech";
+        }
+        elseif ($cn == "Korea, South"){
+            $cname = "Korea (Republic of)";
+        }
+        elseif ($cn == "Korea, North"){
+            $cname = "Korea (Democratic People's Republic of)";
+        }
+        elseif ($cn == "North Macedonia"){
+            $cname = "Macedonia";
+        }
+        elseif ($cn == "Taiwan*"){
+            $cname = "Taiwan";
+        }
+        elseif ($cn == "US"){
+            $cname = "USA";
+        }
+        elseif ($cn == "India"){
+            $cname = "Republic of India";
+        }
+        elseif ($cn == "Guinea"){
+            $cname = "Republic of Guinea";
+        }
+        elseif ($cn == "Sudan"){
+            $cname = "Republic of the Sudan";
+        }
+        $url = "https://restcountries.eu/rest/v2/name/" . $cname;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $lines = curl_exec($ch);
+        $json = json_decode($lines);
+        $percentagecases[$cn] = array();
+        $percentagedeaths[$cn] = array();
+        for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+            $percentagecases[$cn][] = 100 * $cases[$cn][$i]/$json[0]->{'population'};
+            $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/$json[0]->{'population'};
+        }
+        curl_close($ch);
+    }
 ?>
 
 <html>
-<head><meta charset="big5">
-    
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title>Corona Comparer</title>
 	<style>
 	    .column {
@@ -113,7 +171,8 @@
 <p style="text-align: justify;">This is a simple tool to compare cases and deaths in selected countries over time.</p>
 <p style="text-align: justify;">I made it to visualize how well different measures taken by countries are at slowing down the spread of the virus, but you can use it for whatever your heart desires really.</p>
 <p style="text-align: justify;">Updated once a day so data might not be current.</p>
-<p style="text-align: justify;">Data is taken from <a href="https://github.com/CSSEGISandData/COVID-19">John Hopkins University's Github repository for COVID-19</a>. Despite their <a href="https://github.com/CSSEGISandData/COVID-19/issues/977">political bias</a>.. Check their map <a href="https://coronavirus.jhu.edu/map.html">here</a>.</p>
+<p style="text-align: justify;">COVID-19 data is taken from <a href="https://github.com/CSSEGISandData/COVID-19">John Hopkins University's Github repository for COVID-19</a>. Despite their <a href="https://github.com/CSSEGISandData/COVID-19/issues/977">political bias</a>.. Check their map <a href="https://coronavirus.jhu.edu/map.html">here</a>.</p>
+<p style="text-align: justify;">Population data is taken from <a href="https://restcountries.eu/">REST Countries</a>.</p>
 <p style="text-align: justify;">Made by Deniz Yıldırım (denizy@protonmail.com)</p>
 <p style="text-align: justify;">Source code is <a href="https://github.com/denizy97/Coronavirus-Country-Comparer">here</a>.</p>
 <hr>
@@ -149,6 +208,7 @@
 <div class="bigcolumn">
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
+    <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
     <canvas id="DeathPercentGraph"></canvas><!-- Logarithmic Graph -->
 </div>
 
@@ -162,13 +222,18 @@ var linearctx = document.getElementById('lineGraph').getContext('2d');
 var linearChart = new Chart(linearctx);
 var logctx = document.getElementById('logGraph').getContext('2d');
 var logChart = new Chart(logctx);
+var popctx = document.getElementById('popGraph').getContext('2d');
+var popChart = new Chart(popctx);
 var displayLegends = true;
 function recalculate() {
     linearChart.destroy();
     logChart.destroy();
+    popChart.destroy();
     //Get data
     var cases = <?php echo json_encode($cases); ?>;
     var deaths = <?php echo json_encode($deaths); ?>;
+    var percentagecases = <?php echo json_encode($percentagecases); ?>;
+    var percentagedeaths = <?php echo json_encode($percentagedeaths); ?>;
     var selectable_countries = Object.keys(cases);
     //document.write(selectable_countries);
     //get countries from user
@@ -186,6 +251,7 @@ function recalculate() {
     }
     var start_case = parseInt(document.getElementById("startcase").value); //get from user
     var datas = [];
+    var relativedata = [];
     var days = [];
     var biggestday = 0;
     //document.write(JSON.stringify(cases));
@@ -216,6 +282,20 @@ function recalculate() {
         });
         datas.push({label: compared_countries[i] + " deaths",
                     data: deaths[compared_countries[i]].slice(j, deaths[compared_countries[i]].length),
+                    lineTension: 0,
+                    fill: false,
+                    borderColor: '#ff'+ countrycolor + '00',
+                    backgroundColor: '#ff'+ countrycolor + '00'
+        });
+        relativedata.push({label: compared_countries[i] + " % cases/population",
+                    data: percentagecases[compared_countries[i]].slice(j, percentagecases[compared_countries[i]].length),
+                    lineTension: 0,
+                    fill: false,
+                    borderColor: '#00'+ countrycolor + 'ff',
+                    backgroundColor: '#00'+ countrycolor + 'ff'
+        });
+        relativedata.push({label: compared_countries[i] + " % deaths/population",
+                    data: percentagedeaths[compared_countries[i]].slice(j, percentagedeaths[compared_countries[i]].length),
                     lineTension: 0,
                     fill: false,
                     borderColor: '#ff'+ countrycolor + '00',
@@ -313,6 +393,47 @@ function recalculate() {
                     scaleLabel: {
                         display: true,
                         labelString: 'Number of people'
+                    }
+                }]
+            }
+        }
+    });
+    
+    //draw percentage graph
+    popChart = new Chart(popctx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: relativedata
+        },
+        options: {
+            title: {
+                text: 'Percentage of Population',
+                display: true,
+                fontSize: 24
+            },
+            legend: {
+                display: displayLegends
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Days'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: '% Number of people / population'
                     }
                 }]
             }
