@@ -14,4 +14,4 @@ Plot cases and deaths in selected countries starting from the a certain amount o
 ## Notes
 * The python program uses endpoints from the CoronaVirus REST API (https://corona.lmao.ninja)
 * The PHP web version uses only the John Hopkins database from https://github.com/CSSEGISandData/COVID-19
-* You can do whatever you want with this program, idc
+* You can do whatever you want with this program, **I would be happy if you mention my name or this repo if you use it though**
