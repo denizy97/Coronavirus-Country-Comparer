@@ -1,7 +1,7 @@
 <?php
 /*This file is written in 2020 by Deniz YILDIRIM <denizy@protonmail.com>*/
-    $TRcase = 5698;
-    $TRdeath = 92;
+    $TRcase = 7402;
+    $TRdeath = 108;
     $turkish_countries = array(
         "ABD" => "US",
         "Afganistan" => "Afghanistan",
