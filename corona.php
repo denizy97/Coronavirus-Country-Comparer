@@ -263,12 +263,21 @@
 </div>
 <div class="bigcolumn">
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
+    <hr>
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
+    <hr>
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="rateGraph"></canvas><!-- Trajectory Graph -->
+    <hr>
+    <canvas id="rateGraph"></canvas><!-- Rate Graph -->
+    <p style= "text-align: justify;"><strong>*</strong>Latest studies claim that the basic reproduction number (R0) of COVID-19 is around 3, which means each person who gets the virus spreads it to around 3 additional people, quadroupling the number of cases, if no effort is made to slow it down. Studies also say that people with the virus stay infectious 1-2 weeks. This means without policy, each week the amount of cases would multiply by 2.5-4.</p>
+    <p style= "text-align: justify;">The amount of cases multiply by insanely huge amounts in some countries (which is why the graph is capped at x10), because the number of people who get tested increase over time. At any day, there are people who have the virus but who aren't tested, which means unless the amount of people who get tested is big and remains fairly constant, the rate of increase gives little information.</p>
+    <p style= "text-align: justify;">This being said, if a country goes below the no policy zone it is fair to assume that their policies work to some degree. Especially in countries like South Korea and Japan one can see very low rates of increase in cases per week.</p>
+    <hr>
+    <canvas id="trajectoryGraph"></canvas><!-- Trajectory Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.js"></script>
 
 <script>
 resetAll();
@@ -536,11 +545,46 @@ function recalculate() {
                 yAxes: [{
                     display: true,
                     ticks: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 10
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Increase rate'
+                        labelString: 'Cases at given day / cases 7 days before'
+                    }
+                }]
+            },
+            annotation: {
+                annotations: [{
+                    type: 'line',
+                    mode: 'horizontal',
+                    scaleID: 'y-axis-0',
+                    value: 3.25,
+                    borderColor: 'rgba(0,0,0,0)',
+                    label: {
+                        enabled: true,
+                        content: 'no policy rate (1+R0)*',
+                        position: "left",
+                        fontColor: "red",
+                        fontSize: 10,
+                        backgroundColor: 'rgba(0,0,0,0)',
+                    }
+                },
+                {
+                    type: 'box',
+                    drawTime: 'afterDatasetsDraw',
+                    yScaleID: 'y-axis-0',
+                    yMin: 2.5,
+                    yMax: 4,
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                    borderColor: 'red',
+                    label: {
+                        enabled: true,
+                        content: 'no policy rate (1+R0)*',
+                        position: "left",
+                        fontColor: "red",
+                        fontSize: 10,
+                        backgroundColor: 'rgba(0,0,0,0)',
                     }
                 }]
             }

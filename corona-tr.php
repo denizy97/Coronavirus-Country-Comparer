@@ -476,12 +476,21 @@
 </div>
 <div class="bigcolumn">
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
+    <hr>
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
+    <hr>
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="rateGraph"></canvas><!-- Logarithmic Graph -->
+    <hr>
+    <canvas id="rateGraph"></canvas><!-- Rate Graph -->
+    <p style= "text-align: justify;"><strong>*</strong>Son yapılan araştırmalara göre COVID-19'un temel bulaşıcılık katsayısı (R0) 3 civarında, yani eğer önlem alınmazsa virüsü kapan her birey virüsü toplamda yaklaşık 3 kşiye yayıyor ve vaka sayısını dörde katlıyor. Aynı zamanda araştırmalara göre virüsü kapanlar 1-2 hafta boyunca virüsü yayıyor. Yani eğer önlem alınmazsa vaka sayısı her hafte 2.5-4 arası bir sayı ile katlanır.</p>
+    <p style= "text-align: justify;">Bazı ülkelerde vaka sayıları haftadan haftaya çok yüksek miktarda katlanıyor (bu yüzden grafik sadece x10'a kadar), çünkü test yapılan birey sayısı bu ülkelerde günden güne artıyor. Her gün virüsü kapmış olmasına rağmen test edilmeyen bireyler olduğu için, test yapılan birey sayısı yüksek ve sabit tutulmadığı sürece vakaların haftalık artış oranı pek bir bilgi vermiyor.</p>
+    <p style= "text-align: justify;">Bunun yanı sıra tabi eğer bir ülke önlemsiz oranın altına inerse o ülkedeki önlemlerin bir miktar işe yaradığını söylemek yanlış olmaz. Özellikle Japonya ve Güney Kore gibi ülkelerde çok düşün haftalık vaka artış oranları görülüyor.</p>
+    <hr>
+    <canvas id="trajectoryGraph"></canvas><!-- Trajectory Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.js"></script>
 
 <script>
 resetAll();
@@ -742,11 +751,46 @@ function recalculate() {
                 yAxes: [{
                     display: true,
                     ticks: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max:10
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Artış oranı'
+                        labelString: 'Verilen gündeki vaka sayısı / 7 gün önceki vaka sayısı'
+                    }
+                }]
+            },
+            annotation: {
+                annotations: [{
+                    type: 'line',
+                    mode: 'horizontal',
+                    scaleID: 'y-axis-0',
+                    value: 3.25,
+                    borderColor: 'rgba(0,0,0,0)',
+                    label: {
+                        enabled: true,
+                        content: 'önlemsiz oran (1+R0)*',
+                        position: "left",
+                        fontColor: "red",
+                        fontSize: 10,
+                        backgroundColor: 'rgba(0,0,0,0)',
+                    }
+                },
+                {
+                    type: 'box',
+                    drawTime: 'afterDatasetsDraw',
+                    yScaleID: 'y-axis-0',
+                    yMin: 2.5,
+                    yMax: 4,
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                    borderColor: 'red',
+                    label: {
+                        enabled: true,
+                        content: 'no policy rate (1+R0)*',
+                        position: "left",
+                        fontColor: "red",
+                        fontSize: 10,
+                        backgroundColor: 'rgba(0,0,0,0)',
                     }
                 }]
             }
