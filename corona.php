@@ -1,5 +1,8 @@
 <?php
 /*This file is written in 2020 by Deniz YILDIRIM <denizy@protonmail.com>*/
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
     $TRcase = 7402;
     $TRdeath = 108;
     $array = array();
@@ -7,6 +10,7 @@
     $deaths = array();
     $percentagecases = array();
     $percentagedeaths = array();
+    $weeklyrate = array();
     $country_list = array();
     $DATE_COL = 4;
     //Get cases
@@ -18,7 +22,9 @@
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
-        $array[] = str_getcsv($line);
+        if(str_getcsv($line) && array_key_exists(1, str_getcsv($line))){
+            $array[] = str_getcsv($line);
+        }
     }
     
     for ($i = 1; $i < sizeof($array); $i++){
@@ -64,7 +70,9 @@
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
-        $array[] = str_getcsv($line);
+        if(str_getcsv($line) && array_key_exists(1, str_getcsv($line))){
+            $array[] = str_getcsv($line);
+        }
     }
     
     for ($i = 1; $i < sizeof($array); $i++){
@@ -111,8 +119,19 @@
             $cname = "DR Congo";
         }
         elseif ($cn == "Diamond Princess"){
-            $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
-            $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+            for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+                $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
+                $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+            }
+            $weeklyrate[$cn] = array();
+            for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+                if ($day < 7 || $cases[$cn][$day-7] == 0){
+                    $weeklyrate[$cn][] = 0;
+                }
+                else{
+                    $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+                }
+            }
             continue;
         }
         elseif ($cn == "Czechia"){
@@ -142,6 +161,22 @@
         elseif ($cn == "Sudan"){
             $cname = "Republic of the Sudan";
         }
+        elseif ($cn == "MS Zaandam"){
+            for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+                $percentagecases[$cn][] = 100 * $cases[$cn][$i]/1829;
+                $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/1829;
+            }
+            $weeklyrate[$cn] = array();
+            for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+                if ($day < 7 || $cases[$cn][$day-7] == 0){
+                    $weeklyrate[$cn][] = 0;
+                }
+                else{
+                    $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+                }
+            }
+            continue;
+        }
         $url = "https://restcountries.eu/rest/v2/name/" . $cname;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -150,11 +185,24 @@
         $json = json_decode($lines);
         $percentagecases[$cn] = array();
         $percentagedeaths[$cn] = array();
+        //echo("<p>" . $cn . "</p>");
         for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+            //echo("<p>" . $i . "</p>");
             $percentagecases[$cn][] = 100 * $cases[$cn][$i]/$json[0]->{'population'};
             $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/$json[0]->{'population'};
         }
         curl_close($ch);
+        
+        //get weekly increase rate here as well
+        $weeklyrate[$cn] = array();
+        for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+            if ($day < 7 || $cases[$cn][$day-7] == 0){
+                $weeklyrate[$cn][] = 0;
+            }
+            else{
+                $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+            }
+        }
     }
 ?>
 
@@ -188,7 +236,7 @@
     <h3 style="text-align:center;">Instructions</h3>
     <p style="text-align: justify;">1)From below, select countries you want to compare. US and Italy are selected by default as an example. (If you choose more than 10, the legend get disabled to prevent cluttering)</p>
     <p style="text-align: justify;">2)In the graphs, Day 0 is the first day each country passed a selected amount of cases. 100 is the default, for countries with a lot of cases 1000 is also a good number, on the other hand if one of the countries you compare has less cases you might want to turn it even lower. You can change it in the box below.</p>
-    <p style="text-align:center;"><input type="number" autocomplete="off" id="startcase" value=100></p>
+    <p style="text-align:center;"><strong>Starting from </strong><input type="number" autocomplete="off" id="startcase" value=100> <strong>cases</strong></p>
     <p style="text-align: justify;">3)When you are done, press the Compare button below.</p>
     <p style="text-align:center;"><button onclick="recalculate()">Compare</button> <button onclick="resetAll()">Clear Selections</button> <button onclick="selectAll()">Select All (Not Recommended)</button></p>
     <div class="column">
@@ -217,7 +265,7 @@
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="trajectoryGraph"></canvas><!-- Trajectory Graph -->
+    <canvas id="rateGraph"></canvas><!-- Trajectory Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
@@ -232,16 +280,20 @@ var logctx = document.getElementById('logGraph').getContext('2d');
 var logChart = new Chart(logctx);
 var popctx = document.getElementById('popGraph').getContext('2d');
 var popChart = new Chart(popctx);
+var ratectx = document.getElementById('rateGraph').getContext('2d');
+var rateChart = new Chart(ratectx);
 var displayLegends = true;
 function recalculate() {
     linearChart.destroy();
     logChart.destroy();
     popChart.destroy();
+    rateChart.destroy();
     //Get data
     var cases = <?php echo json_encode($cases); ?>;
     var deaths = <?php echo json_encode($deaths); ?>;
     var percentagecases = <?php echo json_encode($percentagecases); ?>;
     var percentagedeaths = <?php echo json_encode($percentagedeaths); ?>;
+    var weeklyrate = <?php echo json_encode($weeklyrate); ?>;
     var selectable_countries = Object.keys(cases);
     //document.write(selectable_countries);
     //get countries from user
@@ -260,6 +312,7 @@ function recalculate() {
     var start_case = parseInt(document.getElementById("startcase").value); //get from user
     var datas = [];
     var relativedata = [];
+    var ratedata = [];
     var days = [];
     var biggestday = 0;
     //document.write(JSON.stringify(cases));
@@ -308,6 +361,13 @@ function recalculate() {
                     fill: false,
                     borderColor: '#ff'+ countrycolor + '00',
                     backgroundColor: '#ff'+ countrycolor + '00'
+        });
+        ratedata.push({label: compared_countries[i] + " weekly rate of increase",
+                    data: weeklyrate[compared_countries[i]].slice(j, weeklyrate[compared_countries[i]].length),
+                    lineTension: 0,
+                    fill: false,
+                    borderColor: '#00'+ countrycolor + 'ff',
+                    backgroundColor: '#00'+ countrycolor + 'ff'
         });
         if (datas[datas.length - 1]["data"].length > biggestday){
             biggestday = datas[datas.length - 1]["data"].length;
@@ -442,6 +502,45 @@ function recalculate() {
                     scaleLabel: {
                         display: true,
                         labelString: '% Number of people / Population'
+                    }
+                }]
+            }
+        }
+    });
+    rateChart = new Chart(ratectx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: ratedata
+        },
+        options: {
+            title: {
+                text: 'Weekly increase rate of cases (Linear)',
+                display: true,
+                fontSize: 24
+            },
+            legend: {
+                display: displayLegends
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Days'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Increase rate'
                     }
                 }]
             }

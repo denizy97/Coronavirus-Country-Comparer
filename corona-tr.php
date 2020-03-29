@@ -1,5 +1,8 @@
 <?php
 /*This file is written in 2020 by Deniz YILDIRIM <denizy@protonmail.com>*/
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
     $TRcase = 7402;
     $TRdeath = 108;
     $turkish_countries = array(
@@ -211,6 +214,7 @@
     $deaths = array();
     $percentagecases = array();
     $percentagedeaths = array();
+    $weeklyrate = array();
     $country_list = array();
     $tr_country_list = array();
     $DATE_COL = 4;
@@ -224,7 +228,9 @@
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
-        $array[] = str_getcsv($line);
+        if(str_getcsv($line) && array_key_exists(1, str_getcsv($line))){
+            $array[] = str_getcsv($line);
+        }
     }
     
     for ($i = 1; $i < sizeof($array); $i++){
@@ -282,7 +288,9 @@
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
-        $array[] = str_getcsv($line);
+        if(str_getcsv($line) && array_key_exists(1, str_getcsv($line))){
+            $array[] = str_getcsv($line);
+        }
     }
     
     for ($i = 1; $i < sizeof($array); $i++){
@@ -326,8 +334,19 @@
             $cname = "DR Congo";
         }
         elseif ($cn == "Diamond Princess"){
-            $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
-            $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+            for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+                $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
+                $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+            }
+            $weeklyrate[$cn] = array();
+            for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+                if ($day < 7 || $cases[$cn][$day-7] == 0){
+                    $weeklyrate[$cn][] = 0;
+                }
+                else{
+                    $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+                }
+            }
             continue;
         }
         elseif ($cn == "Czechia"){
@@ -357,6 +376,22 @@
         elseif ($cn == "Sudan"){
             $cname = "Republic of the Sudan";
         }
+        elseif ($cn == "MS Zaandam"){
+            for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+                $percentagecases[$cn][] = 100 * $cases[$cn][$i]/1829;
+                $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/1829;
+            }
+            $weeklyrate[$cn] = array();
+            for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+                if ($day < 7 || $cases[$cn][$day-7] == 0){
+                    $weeklyrate[$cn][] = 0;
+                }
+                else{
+                    $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+                }
+            }
+            continue;
+        }
         $url = "https://restcountries.eu/rest/v2/name/" . $cname;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -370,6 +405,17 @@
             $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/$json[0]->{'population'};
         }
         curl_close($ch);
+        
+        //get weekly increase rate here as well
+        $weeklyrate[$cn] = array();
+        for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+            if ($day < 7 || $cases[$cn][$day-7] == 0){
+                $weeklyrate[$cn][] = 0;
+            }
+            else{
+                $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+            }
+        }
     }
 ?>
 
@@ -403,7 +449,7 @@
     <h3 style="text-align:center;">Nasıl Çalışır</h3>
     <p style="text-align: justify;">1)Aşağıdan karşılaştırmak istediğiniz ülkeleri seçin. ABD ve İtalya ilk başta örnek olarak seçili. (Eğer 10'dan fazla ülke seçerseniz kalabalık yapmaması için lejant otomatik olarak kaldırılır)</p>
     <p style="text-align: justify;">2)Grafiklerde gün 0, her ülkenin seçilmiş vaka sayısını ilk geçtiği gündür. Varsayılan değer 100'dür, çok vaka olan ülkeler için 1000 de mantıklı bir sayı, eğer karşılaştırmak istediğiniz ülkelerin bir kısmında vaka sayısı azsa o zaman daha düşük değerler seçmelisiniz. Bu değeri aşağıdaki kutudan değiştirebilirsiniz.</p>
-    <p style="text-align:center;"><input type="number" autocomplete="off" id="startcase" value=100></p>
+    <p style="text-align:center;"><strong>Grafikleri </strong><input type="number" autocomplete="off" id="startcase" value=100> <strong> vakadan başlat.</strong></p>
     <p style="text-align: justify;">3)Seçimlerinizi bitirdikten sonra aşağıdaki Karşılaştır düğmesine tıklayın.</p>
     <p style="text-align:center;"><button onclick="recalculate()">Karşılaştır</button> <button onclick="resetAll()">Seçimleri Temizle</button> <button onclick="selectAll()">Hepsini Seç (Tavsiye Etmiyorum)</button></p>
     <div class="column">
@@ -432,7 +478,7 @@
     <canvas id="lineGraph"></canvas><!-- Line Graph -->
     <canvas id="logGraph"></canvas><!-- Logarithmic Graph -->
     <canvas id="popGraph"></canvas><!-- Line Graph relative to population-->
-    <canvas id="trajectoryGraph"></canvas><!-- Logarithmic Graph -->
+    <canvas id="rateGraph"></canvas><!-- Logarithmic Graph -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
@@ -447,16 +493,20 @@ var logctx = document.getElementById('logGraph').getContext('2d');
 var logChart = new Chart(logctx);
 var popctx = document.getElementById('popGraph').getContext('2d');
 var popChart = new Chart(popctx);
+var ratectx = document.getElementById('rateGraph').getContext('2d');
+var rateChart = new Chart(ratectx);
 var displayLegends = true;
 function recalculate() {
     linearChart.destroy();
     logChart.destroy();
     popChart.destroy();
+    rateChart.destroy();
     //Get data
     var cases = <?php echo json_encode($cases); ?>;
     var deaths = <?php echo json_encode($deaths); ?>;
     var percentagecases = <?php echo json_encode($percentagecases); ?>;
     var percentagedeaths = <?php echo json_encode($percentagedeaths); ?>;
+    var weeklyrate = <?php echo json_encode($weeklyrate); ?>;
     var selectable_countries = Object.keys(cases);
     //document.write(selectable_countries);
     //get countries from user
@@ -475,6 +525,7 @@ function recalculate() {
     var start_case = parseInt(document.getElementById("startcase").value); //get from user
     var datas = [];
     var relativedata = [];
+    var ratedata = [];
     var days = [];
     var biggestday = 0;
     //document.write(JSON.stringify(cases));
@@ -517,12 +568,12 @@ function recalculate() {
                     borderColor: '#00'+ countrycolor + 'ff',
                     backgroundColor: '#00'+ countrycolor + 'ff'
         });
-        relativedata.push({label: compared_countries[i] + " % deaths/population",
-                    data: percentagedeaths[compared_countries[i]].slice(j, percentagedeaths[compared_countries[i]].length),
+        ratedata.push({label: compared_countries[i] + " weekly rate of increase",
+                    data: weeklyrate[compared_countries[i]].slice(j, weeklyrate[compared_countries[i]].length),
                     lineTension: 0,
                     fill: false,
-                    borderColor: '#ff'+ countrycolor + '00',
-                    backgroundColor: '#ff'+ countrycolor + '00'
+                    borderColor: '#00'+ countrycolor + 'ff',
+                    backgroundColor: '#00'+ countrycolor + 'ff'
         });
         if (datas[datas.length - 1]["data"].length > biggestday){
             biggestday = datas[datas.length - 1]["data"].length;
@@ -657,6 +708,45 @@ function recalculate() {
                     scaleLabel: {
                         display: true,
                         labelString: '% Vaka/Ölüm Sayısı / Nüfus'
+                    }
+                }]
+            }
+        }
+    });
+    rateChart = new Chart(ratectx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: ratedata
+        },
+        options: {
+            title: {
+                text: 'Haftalık Vaka Artış Oranı (Lineer/Doğrusal)',
+                display: true,
+                fontSize: 24
+            },
+            legend: {
+                display: displayLegends
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Gün'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Artış oranı'
                     }
                 }]
             }
