@@ -3,8 +3,8 @@
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
-    $TRcase = 7402;
-    $TRdeath = 108;
+    $TRcase = 18135;
+    $TRdeath = 356;
     $array = array();
     $cases = array();
     $deaths = array();
@@ -18,7 +18,7 @@
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $csv = curl_exec($ch);
+    $csv = curl_exec($ch); //connection 1
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
@@ -66,7 +66,7 @@
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $csv = curl_exec($ch);
+    $csv = curl_exec($ch); //connection 2
     $lines = explode(PHP_EOL, $csv);
     curl_close($ch);
     foreach ($lines as $line) {
@@ -108,6 +108,144 @@
     }
     
     //get percentages relative to population
+    $url = "https://restcountries.eu/rest/v2/all/";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $lines = curl_exec($ch);
+    $json = json_decode($lines);
+    curl_close($ch);
+    for($i = 0; $i < sizeof($json); $i++){
+        $cname = $json[$i]->{'name'};
+        
+        //echo("<p>" . $cname . "</p>");
+        $cn = $cname;
+        if ($cname == "Bolivia (Plurinational State of)"){
+            $cn = "Bolivia";
+        }
+        elseif ($cname == "Brunei Darussalam"){
+            $cn = "Brunei";
+        }
+        elseif ($cname == "Myanmar"){
+            $cn = "Burma";
+        }
+        elseif ($cname == "Congo"){
+            $cn = "Congo (Brazzaville)";
+        }
+        elseif ($cname == "Congo (Democratic Republic of the)"){
+            $cn = "Congo (Kinshasa)";
+        }
+        elseif ($cname == "Côte d'Ivoire"){
+            $cn = "Cote d'Ivoire";
+        }
+        elseif ($cname == "Czech Republic"){
+            $cn = "Czechia";
+        }
+        elseif ($cname == "Swaziland"){
+            $cn = "Eswatini";
+        }
+        elseif ($cname == "Iran (Islamic Republic of)"){
+            $cn = "Iran";
+        }
+        elseif ($cname == "Korea (Republic of)"){
+            $cn = "Korea, South";
+        }
+        elseif ($cname == "Korea (Democratic People's Republic of)"){
+            $cn = "Korea, North";
+        }
+        elseif ($cname == "Republic of Kosovo"){
+            $cn = "Kosovo";
+        }
+        elseif ($cname == "Lao People's Democratic Republic"){
+            $cn = "Laos";
+        }
+        elseif ($cname == "Macedonia (the former Yugoslav Republic of)"){
+            $cn = "North Macedonia";
+        }
+        elseif ($cname == "Moldova (Republic of)"){
+            $cn = "Moldova";
+        }
+        elseif ($cname == "Palestine, State of"){
+            $cn = "Palestine";
+        }
+        elseif ($cname == "Russian Federation"){
+            $cn = "Russia";
+        }
+        elseif ($cname == "Syrian Arab Republic"){
+            $cn = "Syria";
+        }
+        elseif ($cname == "Taiwan"){
+            $cn = "Taiwan*";
+        }
+        elseif ($cname == "Tanzania, United Republic of"){
+            $cn = "Tanzania";
+        }
+        elseif ($cname == "United Kingdom of Great Britain and Northern Ireland"){
+            $cn = "United Kingdom";
+        }
+        elseif ($cname == "United States of America"){
+            $cn = "US";
+        }
+        elseif ($cname == "Venezuela (Bolivarian Republic of)"){
+            $cn = "Venezuela";
+        }
+        elseif ($cname == "Viet Nam"){
+            $cn = "Vietnam";
+        }
+        
+
+        if($json != NULL && in_array($cn, $country_list)){
+            $percentagecases[$cn] = array();
+            $percentagedeaths[$cn] = array();
+            //echo("<p>" . $cn . "</p>");
+            for ($j = 0; $j < sizeof($cases[$cn]); $j++){
+                //echo("<p>" . $i . "</p>");
+                $percentagecases[$cn][] = 100 * $cases[$cn][$j]/$json[$i]->{'population'};
+                $percentagedeaths[$cn][] = 100 * $deaths[$cn][$j]/$json[$i]->{'population'};
+            }
+            
+            
+            //get weekly increase rate here as well
+            $weeklyrate[$cn] = array();
+            for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+                if ($day < 7 || $cases[$cn][$day-7] == 0){
+                    $weeklyrate[$cn][] = 0;
+                }
+                else{
+                    $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+                }
+            }
+        }
+    }
+    $cn = "Diamond Princess";
+    for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+        $percentagecases[$cn][] = 100 * $cases[$cn][$i]/3711;
+        $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/3711;
+    }
+    $weeklyrate[$cn] = array();
+    for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+        if ($day < 7 || $cases[$cn][$day-7] == 0){
+            $weeklyrate[$cn][] = 0;
+        }
+        else{
+            $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+        }
+    }
+    $cn = "MS Zaandam";
+    for ($i = 0; $i < sizeof($cases[$cn]); $i++){
+        $percentagecases[$cn][] = 100 * $cases[$cn][$i]/1829;
+        $percentagedeaths[$cn][] = 100 * $deaths[$cn][$i]/1829;
+    }
+    $weeklyrate[$cn] = array();
+    for ($day = 0; $day < sizeof($cases[$cn]); $day++){
+        if ($day < 7 || $cases[$cn][$day-7] == 0){
+            $weeklyrate[$cn][] = 0;
+        }
+        else{
+            $weeklyrate[$cn][] = $cases[$cn][$day]/$cases[$cn][$day-7];
+        }
+    }
+    /*
     foreach ($country_list as $cn){
         $cname = $cn;
         
@@ -186,6 +324,11 @@
         $percentagecases[$cn] = array();
         $percentagedeaths[$cn] = array();
         //echo("<p>" . $cn . "</p>");
+        if($json == NULL){
+            echo("<p>" . $cn . "</p>");
+            echo("<p>" . $cname . "</p>");
+            echo("<p>" . curl_error() . "</p>");
+        }
         for ($i = 0; $i < sizeof($cases[$cn]); $i++){
             //echo("<p>" . $i . "</p>");
             $percentagecases[$cn][] = 100 * $cases[$cn][$i]/$json[0]->{'population'};
@@ -204,6 +347,7 @@
             }
         }
     }
+    */
 ?>
 
 <html>
@@ -304,7 +448,7 @@ function recalculate() {
     var percentagedeaths = <?php echo json_encode($percentagedeaths); ?>;
     var weeklyrate = <?php echo json_encode($weeklyrate); ?>;
     var selectable_countries = Object.keys(cases);
-    //document.write(selectable_countries);
+    
     //get countries from user
     var compared_countries = [];
     for (i = 0; i < selectable_countries.length; i++){
