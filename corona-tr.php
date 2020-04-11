@@ -479,10 +479,11 @@
 	</style>
 </head>
 <body>
+<p style="text-align: ;"><a href="https://deniz-yildirim.org/corona.php">> English Version <</a></p>
 <h1 style="text-align: center;">COVID-19 Ülke Karşılaştırması</h1>
 <hr>
 <p style="text-align: justify;">Bu sayfayı kullanarak zaman içinde seçtiğiniz ülkelerdeki vaka ve ölümleri karşılaştırabilirsiniz.</p>
-<p style="text-align: justify;">Bu sayfa ülkelerin virüsün yayılmasını yavaşlamak için aldıkları farklı önlemlerin ne kadar etkili olduklarını karşılaştırmak için hazırladım, ama siz bu grafikleri istediğiniz amaçla kullanabilirsiniz.</p>
+<p style="text-align: justify;">Bu sayfayı ülkelerin virüsün yayılmasını yavaşlamak için aldıkları farklı önlemlerin ne kadar etkili olduklarını karşılaştırmak için hazırladım, ama siz bu grafikleri istediğiniz amaçla kullanabilirsiniz.</p>
 <p style="text-align: justify;">Veriler günde bir kere yenilendiği için güncel olmayabilir.</p>
 <p style="text-align: justify;">Veriler <a href="https://github.com/CSSEGISandData/COVID-19">John Hopkins Üniversitesi'nin COVID-19 Github sayfasından</a> alınıyor. Ne kadar <a href="https://github.com/CSSEGISandData/COVID-19/issues/977">bilime politika katmaya</a> çalışsalar da.. Onların haritasına da <a href="https://coronavirus.jhu.edu/map.html">buradan</a> göz atabilirsiniz.</p>
 <p style="text-align: justify;">Nüfus verisi <a href="https://restcountries.eu/">REST Countries</a>'den alınıyor.</p>

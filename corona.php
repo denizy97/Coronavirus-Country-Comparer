@@ -366,6 +366,7 @@
 	</style>
 </head>
 <body>
+    <p style="text-align: ;"><a href="https://deniz-yildirim.org/corona-tr.php">> Türkçe Versiyonu <</a></p>
 <h1 style="text-align: center;">COVID-19 Country Comparison</h1>
 <hr>
 <p style="text-align: justify;">This is a simple tool to compare cases and deaths in selected countries over time.</p>
